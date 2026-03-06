@@ -41,6 +41,18 @@ export default async function CaptionsPage({ searchParams }: CaptionsPageProps) 
   }
 
   const { data: captions } = await captionsQuery;
+  const captionRows =
+    (captions as Array<{
+      id: string;
+      content: string | null;
+      created_datetime_utc: string | null;
+      is_public: boolean | null;
+      is_featured: boolean | null;
+      like_count: number | null;
+      profile_id: string | null;
+      image_id: string | null;
+      image?: { url: string | null } | { url: string | null }[] | null;
+    }>) ?? [];
 
   return (
     <div className="space-y-8">
@@ -84,7 +96,7 @@ export default async function CaptionsPage({ searchParams }: CaptionsPageProps) 
       </form>
 
       <div className="grid gap-4">
-        {(captions ?? []).map((caption) => (
+        {captionRows.map((caption) => (
           <article
             key={caption.id}
             className="rounded-3xl border border-black/10 bg-white/85 p-6 shadow-md"
@@ -142,7 +154,7 @@ export default async function CaptionsPage({ searchParams }: CaptionsPageProps) 
             })()}
           </article>
         ))}
-        {(captions ?? []).length === 0 && (
+        {captionRows.length === 0 && (
           <p className="text-sm text-[#6b5f57]">
             {query ? "No captions match that search." : "No captions found."}
           </p>
