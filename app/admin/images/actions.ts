@@ -1,7 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { createSupabaseAdminClient } from "@/lib/supabase/admin";
+import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { requireAdmin } from "@/lib/supabase/require-admin";
 
 function normalizeCheckbox(value: FormDataEntryValue | null) {
@@ -22,7 +22,7 @@ export async function createImage(formData: FormData) {
   const isPublic = normalizeCheckbox(formData.get("is_public"));
   const isCommonUse = normalizeCheckbox(formData.get("is_common_use"));
 
-  const supabase = createSupabaseAdminClient();
+  const supabase = await createSupabaseServerClient();
   const { error } = await supabase.from("images").insert({
     url,
     image_description: imageDescription,
@@ -55,7 +55,7 @@ export async function updateImage(formData: FormData) {
   const isPublic = normalizeCheckbox(formData.get("is_public"));
   const isCommonUse = normalizeCheckbox(formData.get("is_common_use"));
 
-  const supabase = createSupabaseAdminClient();
+  const supabase = await createSupabaseServerClient();
   const { error } = await supabase
     .from("images")
     .update({
@@ -84,7 +84,7 @@ export async function deleteImage(formData: FormData) {
     throw new Error("Missing image id.");
   }
 
-  const supabase = createSupabaseAdminClient();
+  const supabase = await createSupabaseServerClient();
   const { error } = await supabase.from("images").delete().eq("id", id);
 
   if (error) {

@@ -1,9 +1,9 @@
-import { createSupabaseAdminClient } from "@/lib/supabase/admin";
+import { createSupabaseServerClient } from "@/lib/supabase/server";
 
 export const dynamic = "force-dynamic";
 
 export default async function CaptionsPage() {
-  const supabase = createSupabaseAdminClient();
+  const supabase = await createSupabaseServerClient();
   const { data: captions } = await supabase
     .from("captions")
     .select(

@@ -1,5 +1,4 @@
 import type { User } from "@supabase/supabase-js";
-import { createSupabaseAdminClient } from "./admin";
 import { createSupabaseServerClient } from "./server";
 
 type AdminProfile = {
@@ -15,7 +14,7 @@ type AdminCheck =
   | { ok: false; reason: "unauthenticated" | "unauthorized" | "missing-profile" };
 
 export async function requireAdmin(): Promise<AdminCheck> {
-  const supabase = createSupabaseServerClient();
+  const supabase = await createSupabaseServerClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();
@@ -24,8 +23,7 @@ export async function requireAdmin(): Promise<AdminCheck> {
     return { ok: false, reason: "unauthenticated" };
   }
 
-  const supabaseAdmin = createSupabaseAdminClient();
-  const { data: profile, error } = await supabaseAdmin
+  const { data: profile, error } = await supabase
     .from("profiles")
     .select("id, email, first_name, last_name, is_superadmin")
     .eq("id", user.id)

@@ -1,10 +1,10 @@
-import { createSupabaseAdminClient } from "@/lib/supabase/admin";
+import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { createImage, deleteImage, updateImage } from "./actions";
 
 export const dynamic = "force-dynamic";
 
 export default async function ImagesPage() {
-  const supabase = createSupabaseAdminClient();
+  const supabase = await createSupabaseServerClient();
   const { data: images } = await supabase
     .from("images")
     .select(

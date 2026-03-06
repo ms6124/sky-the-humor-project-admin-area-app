@@ -1,10 +1,10 @@
 import Link from "next/link";
-import { createSupabaseAdminClient } from "@/lib/supabase/admin";
+import { createSupabaseServerClient } from "@/lib/supabase/server";
 
 export const dynamic = "force-dynamic";
 
 async function getCounts() {
-  const supabase = createSupabaseAdminClient();
+  const supabase = await createSupabaseServerClient();
 
   const [
     profilesResult,
@@ -36,7 +36,7 @@ async function getCounts() {
 }
 
 async function getHighlights() {
-  const supabase = createSupabaseAdminClient();
+  const supabase = await createSupabaseServerClient();
 
   const [recentImages, recentCaptions] = await Promise.all([
     supabase

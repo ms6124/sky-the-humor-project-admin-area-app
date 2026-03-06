@@ -6,7 +6,7 @@ export default function DeniedPage() {
           Access Restricted
         </p>
         <h1 className="text-3xl font-semibold text-[#151515] sm:text-4xl">
-          This admin area is reserved for superadmins.
+          You do not have permission to access this admin area.
         </h1>
         <p className="max-w-xl text-base leading-7 text-[#6b5f57]">
           If you believe you should have access, ask an existing superadmin to
