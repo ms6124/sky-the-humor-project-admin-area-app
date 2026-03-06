@@ -89,11 +89,17 @@ export default async function CaptionsPage({ searchParams }: CaptionsPageProps) 
             key={caption.id}
             className="rounded-3xl border border-black/10 bg-white/85 p-6 shadow-md"
           >
+            {(() => {
+              const imageUrl = Array.isArray(caption.image)
+                ? caption.image[0]?.url
+                : caption.image?.url;
+
+              return (
             <div className="grid gap-4 lg:grid-cols-[160px_1fr]">
               <div className="overflow-hidden rounded-2xl border border-black/10 bg-[#fef6f1]">
-                {caption.image?.url ? (
+                {imageUrl ? (
                   <img
-                    src={caption.image.url}
+                    src={imageUrl}
                     alt="Caption source"
                     className="h-full w-full object-cover"
                     loading="lazy"
@@ -132,6 +138,8 @@ export default async function CaptionsPage({ searchParams }: CaptionsPageProps) 
                 </div>
               </div>
             </div>
+              );
+            })()}
           </article>
         ))}
         {(captions ?? []).length === 0 && (
