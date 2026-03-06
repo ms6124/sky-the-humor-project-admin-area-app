@@ -15,10 +15,11 @@ export async function createImage(formData: FormData) {
   }
 
   const url = (formData.get("url") as string | null)?.trim() || null;
+  if (!url) {
+    throw new Error("Image URL is required.");
+  }
   const imageDescription =
     (formData.get("image_description") as string | null)?.trim() || null;
-  const profileId =
-    (formData.get("profile_id") as string | null)?.trim() || null;
   const isPublic = normalizeCheckbox(formData.get("is_public"));
   const isCommonUse = normalizeCheckbox(formData.get("is_common_use"));
 
@@ -26,7 +27,6 @@ export async function createImage(formData: FormData) {
   const { error } = await supabase.from("images").insert({
     url,
     image_description: imageDescription,
-    profile_id: profileId,
     is_public: isPublic,
     is_common_use: isCommonUse,
   });

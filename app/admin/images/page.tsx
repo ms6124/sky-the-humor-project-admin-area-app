@@ -1,4 +1,5 @@
 import { createSupabaseServerClient } from "@/lib/supabase/server";
+import ImageActions from "./ImageActions";
 import { createImage, deleteImage, updateImage } from "./actions";
 
 export const dynamic = "force-dynamic";
@@ -43,14 +44,7 @@ export default async function ImagesPage() {
               name="url"
               className="mt-2 w-full rounded-2xl border border-black/10 bg-white px-4 py-3 text-[#151515]"
               placeholder="https://..."
-            />
-          </label>
-          <label className="text-sm text-[#6b5f57]">
-            Profile ID (optional)
-            <input
-              name="profile_id"
-              className="mt-2 w-full rounded-2xl border border-black/10 bg-white px-4 py-3 text-[#151515]"
-              placeholder="uuid"
+              required
             />
           </label>
           <label className="text-sm text-[#6b5f57] lg:col-span-2">
@@ -96,16 +90,29 @@ export default async function ImagesPage() {
             className="rounded-3xl border border-black/10 bg-white/85 p-6 shadow-md"
           >
             <div className="flex flex-wrap items-center justify-between gap-4">
-              <div>
-                <p className="text-xs uppercase tracking-[0.3em] text-[#6b5f57]">
-                  {image.created_datetime_utc ?? "No timestamp"}
-                </p>
-                <h3 className="mt-2 text-lg font-semibold text-[#151515]">
-                  {image.url || "Untitled image"}
-                </h3>
-                <p className="mt-2 text-xs text-[#6b5f57]">
-                  Profile: {image.profile_id ?? "N/A"}
-                </p>
+              <div className="flex items-center gap-4">
+                <div className="h-20 w-20 overflow-hidden rounded-2xl border border-black/10 bg-[#fef6f1]">
+                  {image.url ? (
+                    <img
+                      src={image.url}
+                      alt="Uploaded"
+                      className="h-full w-full object-cover"
+                      loading="lazy"
+                    />
+                  ) : (
+                    <div className="flex h-full w-full items-center justify-center text-[10px] uppercase tracking-[0.2em] text-[#6b5f57]">
+                      No image
+                    </div>
+                  )}
+                </div>
+                <div>
+                  <p className="text-xs uppercase tracking-[0.3em] text-[#6b5f57]">
+                    {image.created_datetime_utc ?? "No timestamp"}
+                  </p>
+                  <p className="mt-2 text-xs text-[#6b5f57]">
+                    Profile: {image.profile_id ?? "N/A"}
+                  </p>
+                </div>
               </div>
               <div className="flex flex-wrap gap-2 text-[10px] uppercase tracking-[0.2em] text-[#6b5f57]">
                 <span className="rounded-full border border-black/15 px-2 py-1">
@@ -117,67 +124,11 @@ export default async function ImagesPage() {
               </div>
             </div>
 
-            <form
-              action={updateImage}
-              className="mt-4 grid gap-4 lg:grid-cols-2"
-            >
-              <input type="hidden" name="id" value={image.id} />
-              <label className="text-sm text-[#6b5f57]">
-                Image URL
-                <input
-                  name="url"
-                  defaultValue={image.url ?? ""}
-                  className="mt-2 w-full rounded-2xl border border-black/10 bg-white px-4 py-3 text-[#151515]"
-                />
-              </label>
-              <label className="text-sm text-[#6b5f57] lg:col-span-2">
-                Image description
-                <textarea
-                  name="image_description"
-                  defaultValue={image.image_description ?? ""}
-                  className="mt-2 w-full rounded-2xl border border-black/10 bg-white px-4 py-3 text-[#151515]"
-                  rows={2}
-                />
-              </label>
-              <div className="flex flex-wrap gap-4 text-sm text-[#6b5f57]">
-                <label className="flex items-center gap-2">
-                  <input
-                    type="checkbox"
-                    name="is_public"
-                    defaultChecked={image.is_public ?? false}
-                    className="h-4 w-4 rounded border-black/20"
-                  />
-                  Public
-                </label>
-                <label className="flex items-center gap-2">
-                  <input
-                    type="checkbox"
-                    name="is_common_use"
-                    defaultChecked={image.is_common_use ?? false}
-                    className="h-4 w-4 rounded border-black/20"
-                  />
-                  Common use
-                </label>
-              </div>
-              <div className="flex flex-wrap gap-3">
-                <button
-                  type="submit"
-                  className="rounded-full border border-black/15 px-4 py-2 text-xs font-semibold uppercase tracking-[0.25em] text-[#151515] transition hover:border-black/30 hover:bg-white/70"
-                >
-                  Save changes
-                </button>
-              </div>
-            </form>
-
-            <form action={deleteImage} className="mt-4">
-              <input type="hidden" name="id" value={image.id} />
-              <button
-                type="submit"
-                className="rounded-full border border-red-500/40 px-4 py-2 text-xs font-semibold uppercase tracking-[0.25em] text-red-600 transition hover:border-red-500/70 hover:bg-red-50"
-              >
-                Delete image
-              </button>
-            </form>
+            <ImageActions
+              image={image}
+              updateImage={updateImage}
+              deleteImage={deleteImage}
+            />
           </article>
         ))}
         {(images ?? []).length === 0 && (

@@ -39,8 +39,7 @@ export default function LoginCard() {
           Sign in with Google
         </h1>
         <p className="text-sm leading-6 text-[#6b5f57]">
-          Admin access is limited to verified superadmins. Use your Columbia
-          Google account to continue.
+          Admin access is limited to verified superadmins.
         </p>
       </div>
       <button

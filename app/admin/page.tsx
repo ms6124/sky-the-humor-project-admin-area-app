@@ -11,7 +11,7 @@ async function getCounts() {
     imagesResult,
     captionsResult,
     publicImagesResult,
-    captionLikesResult,
+    recentProfilesResult,
     reportsResult,
   ] = await Promise.all([
     supabase.from("profiles").select("*", { count: "exact", head: true }),
@@ -21,7 +21,13 @@ async function getCounts() {
       .from("images")
       .select("*", { count: "exact", head: true })
       .eq("is_public", true),
-    supabase.from("caption_likes").select("*", { count: "exact", head: true }),
+    supabase
+      .from("profiles")
+      .select("*", { count: "exact", head: true })
+      .gte(
+        "created_datetime_utc",
+        new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString()
+      ),
     supabase.from("reported_captions").select("*", { count: "exact", head: true }),
   ]);
 
@@ -30,7 +36,7 @@ async function getCounts() {
     images: imagesResult.count ?? 0,
     captions: captionsResult.count ?? 0,
     publicImages: publicImagesResult.count ?? 0,
-    captionLikes: captionLikesResult.count ?? 0,
+    recentProfiles: recentProfilesResult.count ?? 0,
     reports: reportsResult.count ?? 0,
   };
 }
@@ -55,6 +61,19 @@ async function getHighlights() {
     recentImages: recentImages.data ?? [],
     recentCaptions: recentCaptions.data ?? [],
   };
+}
+
+function formatImageLabel(url: string | null) {
+  if (!url) {
+    return "Untitled image";
+  }
+
+  try {
+    const parsed = new URL(url);
+    return `${parsed.hostname}${parsed.pathname}`;
+  } catch {
+    return url;
+  }
 }
 
 export default async function AdminHomePage() {
@@ -118,24 +137,15 @@ export default async function AdminHomePage() {
               </Link>
             ))}
           </div>
-          <div className="mt-8 rounded-2xl border border-white/10 bg-white/10 p-4">
-            <p className="text-xs uppercase tracking-[0.3em] text-white/60">
-              Public image ratio
-            </p>
-            <p className="mt-2 text-3xl font-semibold">{publicRatio}</p>
-            <p className="mt-2 text-xs text-white/60">
-              {counts.publicImages} of {counts.images} images visible.
-            </p>
-          </div>
         </div>
       </section>
 
       <section className="grid gap-6 lg:grid-cols-3">
         {[
           {
-            label: "Caption likes",
-            value: counts.captionLikes,
-            note: "All-time positive engagement",
+            label: "Profiles (7d)",
+            value: counts.recentProfiles,
+            note: "New signups this week",
           },
           {
             label: "Reports filed",
@@ -179,7 +189,9 @@ export default async function AdminHomePage() {
                 >
                   <div>
                     <p className="text-sm font-semibold text-[#151515]">
-                      {image.url || "Untitled image"}
+                      <span className="block max-w-[320px] truncate">
+                        {formatImageLabel(image.url)}
+                      </span>
                     </p>
                     <p className="text-xs text-[#6b5f57]">
                       {image.created_datetime_utc}
