@@ -41,12 +41,22 @@ export default function ImageActions({
         onSubmit={closeDetails}
       >
         <input type="hidden" name="id" value={image.id} />
+        <input type="hidden" name="current_url" value={image.url ?? ""} />
         <label className="text-sm text-[#6b5f57]">
           Image URL
           <input
             name="url"
             defaultValue={image.url ?? ""}
             className="mt-2 w-full rounded-2xl border border-black/10 bg-white px-4 py-3 text-[#151515]"
+          />
+        </label>
+        <label className="text-sm text-[#6b5f57]">
+          Upload new file
+          <input
+            name="upload"
+            type="file"
+            accept="image/*"
+            className="mt-2 w-full rounded-2xl border border-dashed border-black/20 bg-white px-4 py-3 text-[#151515]"
           />
         </label>
         <label className="text-sm text-[#6b5f57] lg:col-span-2">

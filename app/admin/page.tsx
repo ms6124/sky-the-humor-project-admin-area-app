@@ -85,7 +85,7 @@ export default async function AdminHomePage() {
 
   return (
     <div className="space-y-12">
-      <section className="grid gap-6 lg:grid-cols-[2fr_1fr]">
+      <section className="grid gap-6">
         <div className="rounded-3xl border border-black/10 bg-white/85 p-8 shadow-lg">
           <p className="text-xs uppercase tracking-[0.3em] text-[#6b5f57]">
             Dashboard
@@ -114,27 +114,6 @@ export default async function AdminHomePage() {
                   {stat.value}
                 </p>
               </div>
-            ))}
-          </div>
-        </div>
-        <div className="rounded-3xl border border-black/10 bg-[#101213] p-6 text-white shadow-lg">
-          <p className="text-xs uppercase tracking-[0.35em] text-white/60">
-            Quick Links
-          </p>
-          <div className="mt-6 space-y-4">
-            {[
-              { href: "/admin/profiles", label: "Review profiles" },
-              { href: "/admin/images", label: "Manage images" },
-              { href: "/admin/captions", label: "Audit captions" },
-            ].map((link) => (
-              <Link
-                key={link.href}
-                href={link.href}
-                className="flex items-center justify-between rounded-2xl border border-white/15 px-4 py-3 text-sm uppercase tracking-[0.2em] text-white/80 transition hover:border-white/40 hover:text-white"
-              >
-                {link.label}
-                <span aria-hidden>-&gt;</span>
-              </Link>
             ))}
           </div>
         </div>
@@ -185,19 +164,17 @@ export default async function AdminHomePage() {
               highlights.recentImages.map((image) => (
                 <div
                   key={image.id}
-                  className="flex items-center justify-between rounded-2xl border border-black/10 bg-white p-3"
+                  className="rounded-2xl border border-black/10 bg-white p-3"
                 >
-                  <div>
-                    <p className="text-sm font-semibold text-[#151515]">
-                      <span className="block max-w-[320px] truncate">
-                        {formatImageLabel(image.url)}
-                      </span>
-                    </p>
-                    <p className="text-xs text-[#6b5f57]">
-                      {image.created_datetime_utc}
-                    </p>
-                  </div>
-                  <span className="rounded-full border border-black/10 px-3 py-1 text-xs uppercase tracking-[0.2em] text-[#6b5f57]">
+                  <p className="text-sm font-semibold text-[#151515]">
+                    <span className="block max-w-[320px] truncate">
+                      {formatImageLabel(image.url)}
+                    </span>
+                  </p>
+                  <p className="mt-1 text-xs text-[#6b5f57]">
+                    {image.created_datetime_utc}
+                  </p>
+                  <span className="mt-2 inline-flex rounded-full border border-black/10 px-3 py-1 text-xs uppercase tracking-[0.2em] text-[#6b5f57]">
                     {image.is_public ? "Public" : "Private"}
                   </span>
                 </div>

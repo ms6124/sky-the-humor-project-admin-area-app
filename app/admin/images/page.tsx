@@ -39,12 +39,20 @@ export default async function ImagesPage() {
         </h3>
         <form action={createImage} className="mt-4 grid gap-4 lg:grid-cols-2">
           <label className="text-sm text-[#6b5f57]">
-            Image URL
+            Image URL (optional)
             <input
               name="url"
               className="mt-2 w-full rounded-2xl border border-black/10 bg-white px-4 py-3 text-[#151515]"
               placeholder="https://..."
-              required
+            />
+          </label>
+          <label className="text-sm text-[#6b5f57]">
+            Upload file
+            <input
+              name="upload"
+              type="file"
+              accept="image/*"
+              className="mt-2 w-full rounded-2xl border border-dashed border-black/20 bg-white px-4 py-3 text-[#151515]"
             />
           </label>
           <label className="text-sm text-[#6b5f57] lg:col-span-2">
