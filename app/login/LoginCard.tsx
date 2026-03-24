@@ -9,20 +9,44 @@ export default function LoginCard() {
   const router = useRouter();
 
   const handleLogin = async () => {
+    if (isLoading) {
+      return;
+    }
+
     setIsLoading(true);
     const supabase = createSupabaseBrowserClient();
-    const { error } = await supabase.auth.signInWithOAuth({
-      provider: "google",
-      options: {
-        redirectTo: `${window.location.origin}/auth/callback`,
-      },
-    });
+    const redirectTo = `${window.location.origin}/auth/callback`;
 
-    if (error) {
+    try {
+      const { data, error } = await supabase.auth.signInWithOAuth({
+        provider: "google",
+        options: {
+          redirectTo,
+        },
+        skipBrowserRedirect: true,
+      });
+
+      if (error) {
+        setIsLoading(false);
+        // eslint-disable-next-line no-alert
+        alert(`Login failed: ${error.message}`);
+        return;
+      }
+
+      if (data?.url) {
+        window.location.assign(data.url);
+        return;
+      }
+    } catch (err) {
       setIsLoading(false);
       // eslint-disable-next-line no-alert
-      alert(`Login failed: ${error.message}`);
+      alert("Login failed. Please try again.");
+      return;
     }
+
+    setIsLoading(false);
+    // eslint-disable-next-line no-alert
+    alert("Login failed. Please try again.");
   };
 
   const handleReturn = () => {
