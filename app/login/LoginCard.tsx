@@ -27,20 +27,12 @@ export default function LoginCard() {
 
       if (error) {
         setIsLoading(false);
-        // eslint-disable-next-line no-alert
-        alert(`Login failed: ${error.message}`);
         return;
       }
     } catch (err) {
       setIsLoading(false);
-      // eslint-disable-next-line no-alert
-      alert("Login failed. Please try again.");
       return;
     }
-
-    setIsLoading(false);
-    // eslint-disable-next-line no-alert
-    alert("Login failed. Please try again.");
   };
 
   const handleReturn = () => {
