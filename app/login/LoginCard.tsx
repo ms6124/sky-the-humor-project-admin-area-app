@@ -18,23 +18,17 @@ export default function LoginCard() {
     const redirectTo = `${window.location.origin}/auth/callback`;
 
     try {
-      const { data, error } = await supabase.auth.signInWithOAuth({
+      const { error } = await supabase.auth.signInWithOAuth({
         provider: "google",
         options: {
           redirectTo,
         },
-        skipBrowserRedirect: true,
       });
 
       if (error) {
         setIsLoading(false);
         // eslint-disable-next-line no-alert
         alert(`Login failed: ${error.message}`);
-        return;
-      }
-
-      if (data?.url) {
-        window.location.assign(data.url);
         return;
       }
     } catch (err) {
