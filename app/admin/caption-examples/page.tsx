@@ -101,25 +101,58 @@ export default async function CaptionExamplesPage() {
             key={example.id}
             className="rounded-3xl border border-black/10 bg-white/85 p-6 shadow-md"
           >
-            <div className="flex flex-wrap items-start justify-between gap-4">
-              <div>
+            <div className="flex flex-wrap items-start justify-between gap-6">
+              <div className="min-w-[240px] flex-1 space-y-5">
                 <p className="text-xs uppercase tracking-[0.3em] text-[#6b5f57]">
                   Priority {example.priority ?? 0}
                 </p>
-                <p className="mt-2 text-sm text-[#6b5f57]">
-                  {example.image_description}
-                </p>
-                <p className="mt-3 text-lg font-semibold text-[#151515]">
-                  {example.caption}
-                </p>
-                <p className="mt-2 text-sm text-[#6b5f57]">
-                  {example.explanation}
-                </p>
+                <div>
+                  <p className="text-[10px] font-semibold uppercase tracking-[0.25em] text-[#6b5f57]">
+                    Image description
+                  </p>
+                  <p className="mt-2 text-sm text-[#6b5f57]">
+                    {example.image_description}
+                  </p>
+                </div>
+                <div>
+                  <p className="text-[10px] font-semibold uppercase tracking-[0.25em] text-[#6b5f57]">
+                    Caption
+                  </p>
+                  <p className="mt-2 text-lg font-semibold text-[#151515]">
+                    {example.caption}
+                  </p>
+                </div>
+                <div>
+                  <p className="text-[10px] font-semibold uppercase tracking-[0.25em] text-[#6b5f57]">
+                    Explanation
+                  </p>
+                  <p className="mt-2 text-sm text-[#6b5f57]">
+                    {example.explanation}
+                  </p>
+                </div>
               </div>
-              <div className="text-xs text-[#6b5f57]">
-                <p>Image: {example.image_id ?? "N/A"}</p>
-                <p>Created: {example.created_datetime_utc ?? "N/A"}</p>
-                <p>Updated: {example.modified_datetime_utc ?? "N/A"}</p>
+              <div className="min-w-[200px] text-xs text-[#6b5f57]">
+                <p className="text-[10px] font-semibold uppercase tracking-[0.25em] text-[#6b5f57]">
+                  Metadata
+                </p>
+                <div className="mt-2 space-y-2">
+                  <p>
+                    <span className="uppercase tracking-[0.2em]">ID</span>:{" "}
+                    {example.id}
+                  </p>
+                  <p>
+                    <span className="uppercase tracking-[0.2em]">Image</span>:{" "}
+                    {example.image_id ?? "N/A"}
+                  </p>
+                  <p>
+                    <span className="uppercase tracking-[0.2em]">Created</span>:{" "}
+                    {example.created_datetime_utc ?? "N/A"}
+                  </p>
+                  <p>
+                    <span className="uppercase tracking-[0.2em]">Updated</span>:{" "}
+                    {example.modified_datetime_utc ?? "N/A"}
+                  </p>
+                </div>
               </div>
             </div>
             <details className="mt-4 rounded-2xl border border-black/10 bg-white/70 p-4">
