@@ -1,5 +1,6 @@
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { createLlmModel, deleteLlmModel, updateLlmModel } from "./actions";
+import Pagination from "../Pagination";
 
 export const dynamic = "force-dynamic";
 
@@ -23,8 +24,31 @@ function getRelationValue<T extends Record<string, string | null>>(
   return relation[key] ?? null;
 }
 
-export default async function LlmModelsPage() {
+type LlmModelsPageProps = {
+  searchParams?: {
+    page?: string | string[];
+  };
+};
+
+export default async function LlmModelsPage({ searchParams }: LlmModelsPageProps) {
   const supabase = await createSupabaseServerClient();
+  const resolvedSearchParams = await Promise.resolve(searchParams);
+  const pageParam = Array.isArray(resolvedSearchParams?.page)
+    ? resolvedSearchParams?.page[0]
+    : resolvedSearchParams?.page;
+  const requestedPage = Number.parseInt(pageParam ?? "1", 10);
+  const pageSize = 20;
+  const currentPage =
+    Number.isFinite(requestedPage) && requestedPage > 0 ? requestedPage : 1;
+
+  const { count } = await supabase
+    .from("llm_models")
+    .select("id", { count: "exact", head: true });
+  const totalPages = Math.max(1, Math.ceil((count ?? 0) / pageSize));
+  const safePage = Math.min(currentPage, totalPages);
+  const from = (safePage - 1) * pageSize;
+  const to = from + pageSize - 1;
+
   const [{ data: models }, { data: providers }] = await Promise.all([
     supabase
       .from("llm_models")
@@ -32,11 +56,20 @@ export default async function LlmModelsPage() {
         "id, name, provider_model_id, llm_provider_id, is_temperature_supported, created_datetime_utc, llm_providers(name)"
       )
       .order("created_datetime_utc", { ascending: false })
-      .limit(200),
+      .range(from, to),
     supabase.from("llm_providers").select("id, name").order("name"),
   ]);
 
   const providerOptions = (providers ?? []) as Provider[];
+  const basePath = "/admin/llm-models";
+  const buildPageHref = (pageNumber: number) => {
+    const params = new URLSearchParams();
+    if (pageNumber > 1) {
+      params.set("page", pageNumber.toString());
+    }
+    const queryString = params.toString();
+    return queryString ? `${basePath}?${queryString}` : basePath;
+  };
 
   return (
     <div className="space-y-8">
@@ -214,6 +247,14 @@ export default async function LlmModelsPage() {
           <p className="text-sm text-[#6b5f57]">No models found.</p>
         )}
       </section>
+      <Pagination
+        currentPage={safePage}
+        totalPages={totalPages}
+        previousHref={safePage > 1 ? buildPageHref(safePage - 1) : undefined}
+        nextHref={
+          safePage < totalPages ? buildPageHref(safePage + 1) : undefined
+        }
+      />
     </div>
   );
 }

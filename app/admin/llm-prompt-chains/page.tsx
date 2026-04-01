@@ -1,14 +1,50 @@
 import { createSupabaseServerClient } from "@/lib/supabase/server";
+import Pagination from "../Pagination";
 
 export const dynamic = "force-dynamic";
 
-export default async function LlmPromptChainsPage() {
+type LlmPromptChainsPageProps = {
+  searchParams?: {
+    page?: string | string[];
+  };
+};
+
+export default async function LlmPromptChainsPage({
+  searchParams,
+}: LlmPromptChainsPageProps) {
   const supabase = await createSupabaseServerClient();
+  const resolvedSearchParams = await Promise.resolve(searchParams);
+  const pageParam = Array.isArray(resolvedSearchParams?.page)
+    ? resolvedSearchParams?.page[0]
+    : resolvedSearchParams?.page;
+  const requestedPage = Number.parseInt(pageParam ?? "1", 10);
+  const pageSize = 20;
+  const currentPage =
+    Number.isFinite(requestedPage) && requestedPage > 0 ? requestedPage : 1;
+
+  const { count } = await supabase
+    .from("llm_prompt_chains")
+    .select("id", { count: "exact", head: true });
+  const totalPages = Math.max(1, Math.ceil((count ?? 0) / pageSize));
+  const safePage = Math.min(currentPage, totalPages);
+  const from = (safePage - 1) * pageSize;
+  const to = from + pageSize - 1;
+
   const { data: chains } = await supabase
     .from("llm_prompt_chains")
     .select("id, created_datetime_utc, caption_request_id")
     .order("created_datetime_utc", { ascending: false })
-    .limit(200);
+    .range(from, to);
+
+  const basePath = "/admin/llm-prompt-chains";
+  const buildPageHref = (pageNumber: number) => {
+    const params = new URLSearchParams();
+    if (pageNumber > 1) {
+      params.set("page", pageNumber.toString());
+    }
+    const queryString = params.toString();
+    return queryString ? `${basePath}?${queryString}` : basePath;
+  };
 
   return (
     <div className="space-y-8">
@@ -60,6 +96,14 @@ export default async function LlmPromptChainsPage() {
           </p>
         )}
       </div>
+      <Pagination
+        currentPage={safePage}
+        totalPages={totalPages}
+        previousHref={safePage > 1 ? buildPageHref(safePage - 1) : undefined}
+        nextHref={
+          safePage < totalPages ? buildPageHref(safePage + 1) : undefined
+        }
+      />
     </div>
   );
 }

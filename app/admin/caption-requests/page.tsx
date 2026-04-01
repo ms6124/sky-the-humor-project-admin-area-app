@@ -19,11 +19,12 @@ function getRelationValue<T extends Record<string, string | null>>(
 
 export default async function CaptionRequestsPage() {
   const supabase = await createSupabaseServerClient();
+
   const { data: requests } = await supabase
     .from("caption_requests")
     .select("id, created_datetime_utc, profile_id, image_id, profiles(email), images(url)")
     .order("created_datetime_utc", { ascending: false })
-    .limit(200);
+    .limit(20);
 
   return (
     <div className="space-y-8">

@@ -1,17 +1,63 @@
 import { createSupabaseServerClient } from "@/lib/supabase/server";
+import Pagination from "../Pagination";
 
 export const dynamic = "force-dynamic";
 
 type ProfilesPageProps = {
   searchParams?: {
     q?: string;
+    page?: string | string[];
   };
 };
 
 export default async function ProfilesPage({ searchParams }: ProfilesPageProps) {
   const supabase = await createSupabaseServerClient();
   const resolvedSearchParams = await Promise.resolve(searchParams);
-  const query = (resolvedSearchParams?.q ?? "").trim();
+  const queryParam = Array.isArray(resolvedSearchParams?.q)
+    ? resolvedSearchParams?.q[0]
+    : resolvedSearchParams?.q;
+  const query = (queryParam ?? "").trim();
+  const pageParam = Array.isArray(resolvedSearchParams?.page)
+    ? resolvedSearchParams?.page[0]
+    : resolvedSearchParams?.page;
+  const requestedPage = Number.parseInt(pageParam ?? "1", 10);
+  const pageSize = 20;
+  const currentPage =
+    Number.isFinite(requestedPage) && requestedPage > 0 ? requestedPage : 1;
+
+  const looksLikeUuid =
+    /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(
+      query
+    );
+
+  let profilesCountQuery = supabase
+    .from("profiles")
+    .select("id", { count: "exact", head: true });
+
+  if (query) {
+    profilesCountQuery = looksLikeUuid
+      ? profilesCountQuery.or(
+          [
+            `id.eq.${query}`,
+            `email.ilike.%${query}%`,
+            `first_name.ilike.%${query}%`,
+            `last_name.ilike.%${query}%`,
+          ].join(",")
+        )
+      : profilesCountQuery.or(
+          [
+            `email.ilike.%${query}%`,
+            `first_name.ilike.%${query}%`,
+            `last_name.ilike.%${query}%`,
+          ].join(",")
+        );
+  }
+
+  const { count } = await profilesCountQuery;
+  const totalPages = Math.max(1, Math.ceil((count ?? 0) / pageSize));
+  const safePage = Math.min(currentPage, totalPages);
+  const from = (safePage - 1) * pageSize;
+  const to = from + pageSize - 1;
 
   let profilesQuery = supabase
     .from("profiles")
@@ -19,14 +65,9 @@ export default async function ProfilesPage({ searchParams }: ProfilesPageProps) 
       "id, first_name, last_name, email, is_superadmin, is_matrix_admin, is_in_study, created_datetime_utc"
     )
     .order("created_datetime_utc", { ascending: false })
-    .limit(100);
+    .range(from, to);
 
   if (query) {
-    const looksLikeUuid =
-      /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(
-        query
-      );
-
     profilesQuery = looksLikeUuid
       ? profilesQuery.or(
           [
@@ -46,6 +87,18 @@ export default async function ProfilesPage({ searchParams }: ProfilesPageProps) 
   }
 
   const { data: profiles } = await profilesQuery;
+  const basePath = "/admin/profiles";
+  const buildPageHref = (pageNumber: number) => {
+    const params = new URLSearchParams();
+    if (query) {
+      params.set("q", query);
+    }
+    if (pageNumber > 1) {
+      params.set("page", pageNumber.toString());
+    }
+    const queryString = params.toString();
+    return queryString ? `${basePath}?${queryString}` : basePath;
+  };
 
   return (
     <div className="space-y-8">
@@ -148,6 +201,14 @@ export default async function ProfilesPage({ searchParams }: ProfilesPageProps) 
           </p>
         )}
       </div>
+      <Pagination
+        currentPage={safePage}
+        totalPages={totalPages}
+        previousHref={safePage > 1 ? buildPageHref(safePage - 1) : undefined}
+        nextHref={
+          safePage < totalPages ? buildPageHref(safePage + 1) : undefined
+        }
+      />
     </div>
   );
 }

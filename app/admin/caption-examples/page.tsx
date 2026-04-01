@@ -4,18 +4,54 @@ import {
   deleteCaptionExample,
   updateCaptionExample,
 } from "./actions";
+import Pagination from "../Pagination";
 
 export const dynamic = "force-dynamic";
 
-export default async function CaptionExamplesPage() {
+type CaptionExamplesPageProps = {
+  searchParams?: {
+    page?: string | string[];
+  };
+};
+
+export default async function CaptionExamplesPage({
+  searchParams,
+}: CaptionExamplesPageProps) {
   const supabase = await createSupabaseServerClient();
+  const resolvedSearchParams = await Promise.resolve(searchParams);
+  const pageParam = Array.isArray(resolvedSearchParams?.page)
+    ? resolvedSearchParams?.page[0]
+    : resolvedSearchParams?.page;
+  const requestedPage = Number.parseInt(pageParam ?? "1", 10);
+  const pageSize = 20;
+  const currentPage =
+    Number.isFinite(requestedPage) && requestedPage > 0 ? requestedPage : 1;
+
+  const { count } = await supabase
+    .from("caption_examples")
+    .select("id", { count: "exact", head: true });
+  const totalPages = Math.max(1, Math.ceil((count ?? 0) / pageSize));
+  const safePage = Math.min(currentPage, totalPages);
+  const from = (safePage - 1) * pageSize;
+  const to = from + pageSize - 1;
+
   const { data: examples } = await supabase
     .from("caption_examples")
     .select(
       "id, image_description, caption, explanation, priority, image_id, created_datetime_utc, modified_datetime_utc"
     )
     .order("priority", { ascending: false })
-    .limit(200);
+    .range(from, to);
+
+  const basePath = "/admin/caption-examples";
+  const buildPageHref = (pageNumber: number) => {
+    const params = new URLSearchParams();
+    if (pageNumber > 1) {
+      params.set("page", pageNumber.toString());
+    }
+    const queryString = params.toString();
+    return queryString ? `${basePath}?${queryString}` : basePath;
+  };
 
   return (
     <div className="space-y-8">
@@ -233,6 +269,14 @@ export default async function CaptionExamplesPage() {
           <p className="text-sm text-[#6b5f57]">No caption examples found.</p>
         )}
       </section>
+      <Pagination
+        currentPage={safePage}
+        totalPages={totalPages}
+        previousHref={safePage > 1 ? buildPageHref(safePage - 1) : undefined}
+        nextHref={
+          safePage < totalPages ? buildPageHref(safePage + 1) : undefined
+        }
+      />
     </div>
   );
 }

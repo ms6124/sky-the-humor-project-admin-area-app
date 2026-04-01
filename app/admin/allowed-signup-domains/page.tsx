@@ -1,15 +1,51 @@
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { createAllowedDomain, deleteAllowedDomain, updateAllowedDomain } from "./actions";
+import Pagination from "../Pagination";
 
 export const dynamic = "force-dynamic";
 
-export default async function AllowedSignupDomainsPage() {
+type AllowedSignupDomainsPageProps = {
+  searchParams?: {
+    page?: string | string[];
+  };
+};
+
+export default async function AllowedSignupDomainsPage({
+  searchParams,
+}: AllowedSignupDomainsPageProps) {
   const supabase = await createSupabaseServerClient();
+  const resolvedSearchParams = await Promise.resolve(searchParams);
+  const pageParam = Array.isArray(resolvedSearchParams?.page)
+    ? resolvedSearchParams?.page[0]
+    : resolvedSearchParams?.page;
+  const requestedPage = Number.parseInt(pageParam ?? "1", 10);
+  const pageSize = 20;
+  const currentPage =
+    Number.isFinite(requestedPage) && requestedPage > 0 ? requestedPage : 1;
+
+  const { count } = await supabase
+    .from("allowed_signup_domains")
+    .select("id", { count: "exact", head: true });
+  const totalPages = Math.max(1, Math.ceil((count ?? 0) / pageSize));
+  const safePage = Math.min(currentPage, totalPages);
+  const from = (safePage - 1) * pageSize;
+  const to = from + pageSize - 1;
+
   const { data: domains } = await supabase
     .from("allowed_signup_domains")
     .select("id, apex_domain, created_datetime_utc")
     .order("created_datetime_utc", { ascending: false })
-    .limit(200);
+    .range(from, to);
+
+  const basePath = "/admin/allowed-signup-domains";
+  const buildPageHref = (pageNumber: number) => {
+    const params = new URLSearchParams();
+    if (pageNumber > 1) {
+      params.set("page", pageNumber.toString());
+    }
+    const queryString = params.toString();
+    return queryString ? `${basePath}?${queryString}` : basePath;
+  };
 
   return (
     <div className="space-y-8">
@@ -100,6 +136,14 @@ export default async function AllowedSignupDomainsPage() {
           <p className="text-sm text-[#6b5f57]">No domains found.</p>
         )}
       </section>
+      <Pagination
+        currentPage={safePage}
+        totalPages={totalPages}
+        previousHref={safePage > 1 ? buildPageHref(safePage - 1) : undefined}
+        nextHref={
+          safePage < totalPages ? buildPageHref(safePage + 1) : undefined
+        }
+      />
     </div>
   );
 }

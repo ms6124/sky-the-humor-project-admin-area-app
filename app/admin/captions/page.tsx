@@ -1,17 +1,58 @@
 import { createSupabaseServerClient } from "@/lib/supabase/server";
+import Pagination from "../Pagination";
 
 export const dynamic = "force-dynamic";
 
 type CaptionsPageProps = {
   searchParams?: {
     q?: string;
+    page?: string | string[];
   };
 };
 
 export default async function CaptionsPage({ searchParams }: CaptionsPageProps) {
   const supabase = await createSupabaseServerClient();
   const resolvedSearchParams = await Promise.resolve(searchParams);
-  const query = (resolvedSearchParams?.q ?? "").trim();
+  const queryParam = Array.isArray(resolvedSearchParams?.q)
+    ? resolvedSearchParams?.q[0]
+    : resolvedSearchParams?.q;
+  const query = (queryParam ?? "").trim();
+  const pageParam = Array.isArray(resolvedSearchParams?.page)
+    ? resolvedSearchParams?.page[0]
+    : resolvedSearchParams?.page;
+  const requestedPage = Number.parseInt(pageParam ?? "1", 10);
+  const pageSize = 20;
+  const currentPage =
+    Number.isFinite(requestedPage) && requestedPage > 0 ? requestedPage : 1;
+
+  const looksLikeUuid =
+    /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(
+      query
+    );
+
+  let captionsCountQuery = supabase
+    .from("captions")
+    .select("id", { count: "exact", head: true })
+    .not("content", "is", null)
+    .neq("content", "");
+
+  if (query) {
+    captionsCountQuery = looksLikeUuid
+      ? captionsCountQuery.or(
+          [
+            `content.ilike.%${query}%`,
+            `profile_id.eq.${query}`,
+            `image_id.eq.${query}`,
+          ].join(",")
+        )
+      : captionsCountQuery.ilike("content", `%${query}%`);
+  }
+
+  const { count } = await captionsCountQuery;
+  const totalPages = Math.max(1, Math.ceil((count ?? 0) / pageSize));
+  const safePage = Math.min(currentPage, totalPages);
+  const from = (safePage - 1) * pageSize;
+  const to = from + pageSize - 1;
 
   let captionsQuery = supabase
     .from("captions")
@@ -21,14 +62,9 @@ export default async function CaptionsPage({ searchParams }: CaptionsPageProps) 
     .not("content", "is", null)
     .neq("content", "")
     .order("created_datetime_utc", { ascending: false })
-    .limit(100);
+    .range(from, to);
 
   if (query) {
-    const looksLikeUuid =
-      /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(
-        query
-      );
-
     captionsQuery = looksLikeUuid
       ? captionsQuery.or(
           [
@@ -53,6 +89,18 @@ export default async function CaptionsPage({ searchParams }: CaptionsPageProps) 
       image_id: string | null;
       image?: { url: string | null } | { url: string | null }[] | null;
     }>) ?? [];
+  const basePath = "/admin/captions";
+  const buildPageHref = (pageNumber: number) => {
+    const params = new URLSearchParams();
+    if (query) {
+      params.set("q", query);
+    }
+    if (pageNumber > 1) {
+      params.set("page", pageNumber.toString());
+    }
+    const queryString = params.toString();
+    return queryString ? `${basePath}?${queryString}` : basePath;
+  };
 
   return (
     <div className="space-y-8">
@@ -160,6 +208,14 @@ export default async function CaptionsPage({ searchParams }: CaptionsPageProps) 
           </p>
         )}
       </div>
+      <Pagination
+        currentPage={safePage}
+        totalPages={totalPages}
+        previousHref={safePage > 1 ? buildPageHref(safePage - 1) : undefined}
+        nextHref={
+          safePage < totalPages ? buildPageHref(safePage + 1) : undefined
+        }
+      />
     </div>
   );
 }
