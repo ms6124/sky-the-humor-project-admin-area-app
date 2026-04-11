@@ -1,5 +1,6 @@
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import Pagination from "../Pagination";
+import { duplicateHumorFlavor } from "./actions";
 
 export const dynamic = "force-dynamic";
 
@@ -72,6 +73,7 @@ export default async function HumorFlavorsPage({
               <th className="px-4 py-3">Slug</th>
               <th className="px-4 py-3">Description</th>
               <th className="px-4 py-3">Created</th>
+              <th className="px-4 py-3">Duplicate</th>
             </tr>
           </thead>
           <tbody>
@@ -85,6 +87,26 @@ export default async function HumorFlavorsPage({
                 </td>
                 <td className="px-4 py-3 text-[#6b5f57]">
                   {flavor.created_datetime_utc ?? "N/A"}
+                </td>
+                <td className="px-4 py-3">
+                  <form
+                    action={duplicateHumorFlavor}
+                    className="flex flex-wrap items-center gap-2"
+                  >
+                    <input type="hidden" name="id" value={flavor.id} />
+                    <input
+                      name="new_slug"
+                      required
+                      placeholder="New slug"
+                      className="w-40 rounded-full border border-black/10 bg-white/85 px-3 py-2 text-xs text-[#151515]"
+                    />
+                    <button
+                      type="submit"
+                      className="rounded-full border border-black/15 px-3 py-2 text-[10px] font-semibold uppercase tracking-[0.2em] text-[#151515] transition hover:border-black/30 hover:bg-white/70"
+                    >
+                      Duplicate
+                    </button>
+                  </form>
                 </td>
               </tr>
             ))}

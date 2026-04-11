@@ -97,6 +97,14 @@ export default async function AdminHomePage() {
             Track the content pipeline, keep an eye on activity spikes, and
             ensure only the best captions make the public feed.
           </p>
+          <div className="mt-6">
+            <Link
+              href="/admin/caption-rating-stats"
+              className="inline-flex items-center rounded-full border border-black/15 px-5 py-2 text-xs font-semibold uppercase tracking-[0.25em] text-[#151515] transition hover:border-black/30 hover:bg-white/70"
+            >
+              Caption rating stats
+            </Link>
+          </div>
           <div className="mt-8 grid gap-4 sm:grid-cols-3">
             {[
               { label: "Profiles", value: counts.profiles },
